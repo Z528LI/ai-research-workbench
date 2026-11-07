@@ -4,6 +4,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "test": "node --test tests/analysis.test.cjs"
+    "test": "node --test",
+    "workbench:demo": "node self-hosted/build.mjs --demo",
+    "workbench:refresh": "node self-hosted/build.mjs --live"
   }
 }

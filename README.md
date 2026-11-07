@@ -14,7 +14,11 @@ The English Research Workbench presents 15 reviewed research views. This reposit
 
 [![Research Workbench architecture](docs/architecture.png)](https://z528li.github.io/ai-research-workbench/docs/architecture.html)
 
-This repository contains the documentation and Market Lab application. The production source code and raw datasets remain private.
+The production source code and raw datasets remain private.
+
+## Build your own daily workbench
+
+The [self-hosted edition](self-hosted/README.md) builds a standalone English dashboard from public sources. Run the offline sample with `npm run workbench:demo`, or [configure daily updates on your GitHub fork](self-hosted/README.md#publish-a-daily-report-from-your-own-github-fork). It uses independent data and calculations, with optional SEC filings and local market analytics.
 
 ## Use your data
 

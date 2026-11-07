@@ -1,0 +1,97 @@
+name: Self-hosted Workbench
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/self-hosted-workbench.yml'
+      - 'self-hosted/**'
+      - 'tests/**'
+      - 'market-analysis.js'
+      - 'package.json'
+  push:
+    paths:
+      - '.github/workflows/self-hosted-workbench.yml'
+      - 'self-hosted/**'
+      - 'tests/**'
+      - 'market-analysis.js'
+      - 'package.json'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish to this repository's opted-in GitHub Pages site
+        type: boolean
+        default: false
+  schedule:
+    - cron: '17 23 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: self-hosted-workbench-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.event_name != 'schedule' || vars.WORKBENCH_ENABLE_PAGES == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: npm test
+      - run: npm run workbench:demo -- --output "$RUNNER_TEMP/workbench-demo"
+
+  refresh:
+    if: >-
+      github.ref_name == github.event.repository.default_branch &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && vars.WORKBENCH_ENABLE_PAGES == 'true'))
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Build the current public-data report
+        env:
+          WORKBENCH_ISSUERS: ${{ vars.WORKBENCH_ENABLE_PAGES == 'true' && vars.WORKBENCH_ISSUERS || '' }}
+          SEC_USER_AGENT: ${{ vars.WORKBENCH_ENABLE_PAGES == 'true' && secrets.SEC_USER_AGENT || '' }}
+        run: |
+          npm run workbench:refresh -- --output "$RUNNER_TEMP/site/daily"
+          test -s "$RUNNER_TEMP/site/daily/index.html"
+      - name: Preserve Market Lab and the architecture
+        if: vars.WORKBENCH_ENABLE_PAGES == 'true' && (github.event_name == 'schedule' || inputs.publish)
+        run: |
+          cp index.html market-analysis.js workbench.js workbench.css .nojekyll "$RUNNER_TEMP/site/"
+          mkdir -p "$RUNNER_TEMP/site/docs"
+          cp docs/architecture.html docs/architecture-LICENSE.txt "$RUNNER_TEMP/site/docs/"
+      - name: Stage site for GitHub Pages
+        if: vars.WORKBENCH_ENABLE_PAGES == 'true' && (github.event_name == 'schedule' || inputs.publish)
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: ${{ runner.temp }}/site
+
+  deploy:
+    if: vars.WORKBENCH_ENABLE_PAGES == 'true' && (github.event_name == 'schedule' || inputs.publish)
+    needs: refresh
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish the verified site
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
