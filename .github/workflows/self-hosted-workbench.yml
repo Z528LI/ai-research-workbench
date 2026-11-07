@@ -65,8 +65,11 @@ jobs:
         env:
           WORKBENCH_ISSUERS: ${{ vars.WORKBENCH_ENABLE_PAGES == 'true' && vars.WORKBENCH_ISSUERS || '' }}
           SEC_USER_AGENT: ${{ vars.WORKBENCH_ENABLE_PAGES == 'true' && secrets.SEC_USER_AGENT || '' }}
+          WORKBENCH_CROSSREF: ${{ vars.WORKBENCH_CROSSREF }}
+          WORKBENCH_PUBLIC_INPUT_URL: ${{ vars.WORKBENCH_ENABLE_PAGES == 'true' && vars.WORKBENCH_PUBLIC_INPUT_URL || '' }}
+          WORKBENCH_REQUIRE_FULL_COVERAGE: ${{ vars.WORKBENCH_ENABLE_PAGES == 'true' && vars.WORKBENCH_REQUIRE_FULL_COVERAGE || '' }}
         run: |
-          npm run workbench:refresh -- --output "$RUNNER_TEMP/site/daily"
+          npm run workbench:refresh -- --output "$RUNNER_TEMP/site/daily" --stable-links
           test -s "$RUNNER_TEMP/site/daily/index.html"
       - name: Preserve Market Lab and the architecture
         if: vars.WORKBENCH_ENABLE_PAGES == 'true' && (github.event_name == 'schedule' || inputs.publish)

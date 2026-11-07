@@ -1,3 +1,5 @@
+import { httpsLink } from './inputs.mjs';
+
 const SETUP = 'https://github.com/Z528LI/ai-research-workbench/blob/main/self-hosted/README.md';
 const MARKET_LAB = 'https://z528li.github.io/ai-research-workbench/';
 const SEC_HOSTS = new Set(['sec.gov', 'www.sec.gov', 'data.sec.gov']);
@@ -300,7 +302,7 @@ function filingLink(value) {
   }
 }
 
-function isEarnings(filing) {
+export function isEarnings(filing) {
   const form = String(filing.form).toUpperCase().replace(/\/A$/, '');
   if (form === '10-Q' || form === '10-K') return true;
   const items = Array.isArray(filing.items) ? filing.items : String(filing.items ?? '').split(/[\s,;]+/);
@@ -341,70 +343,111 @@ function renderFilings(filings, demo, earnings = false) {
   `, sourceLabel(filings.source, demo ? 'Example filing records' : 'SEC EDGAR') + (entries.length ? ' · Latest filing ' + dateLabel(entries[0].filing.filed) : ''));
 }
 
-export function renderWorkbench(report) {
-  const demo = report.mode === 'demo';
-  const timestamp = typeof report.generatedAt === 'string' ? report.generatedAt : '';
-  const generated = dateLabel(timestamp.slice(0, 10));
-  const cards = [
-    ['Rates and term structure', report.treasury?.observations?.length > 0],
-    ['Labor market and prices', report.labor?.unemployment?.length > 0 || report.labor?.cpi?.length > 0],
-    ['Market participation', Boolean(report.market)],
-    ['Benchmark comparison', Boolean(report.market)],
-    ['Moving-average signals', Boolean(report.market)],
-    ['Issuer disclosures', Boolean(report.filings)],
-    ['Earnings-related disclosures', Boolean(report.filings)],
-  ];
-  const navigation = VIEWS.map(([id, index, title], i) => `<li><a href="#${id}">
-    <span class="nav-index" aria-hidden="true">${index}</span>
-    <span class="nav-title">${title}</span><span class="nav-description">${cards[i][0]}</span>
-    ${cards[i][1] ? '' : '<span class="nav-state">Optional setup</span>'}
-  </a></li>`).join('');
+function shell({ title, lead, eyebrow, date, dateTitle, home, body }) {
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="A self-hosted workbench for market, macro and company research.">
-  <title>Research Workbench | Source-to-Trade</title>
+  <title>${escape(title)} | Source-to-Trade</title>
   <!-- WORKBENCH_STYLE -->
 </head>
 <body>
-  <a class="skip" href="#views">Skip to research views</a>
+  <a class="skip" href="#views">Skip to content</a>
   <header class="hero">
     <div class="wrap">
       <div class="masthead">
-        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>Source-to-Trade</a>
+        <a class="brand" href="${escape(home)}"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>Source-to-Trade</a>
         <div class="header-links"><a href="${MARKET_LAB}">Market Lab</a><a href="${SETUP}">Setup guide</a></div>
       </div>
       <div class="hero-content" id="top">
-        <div>
-          <p class="eyebrow">${demo ? 'Self-hosted example' : 'Self-hosted research'}</p>
-          <h1>Research Workbench</h1>
-          <p class="hero-lead">Rates, market participation and company disclosures in one research workspace.</p>
-        </div>
-        <div class="build-date"><span>Snapshot generated</span><strong><time datetime="${escape(timestamp)}">${escape(generated)}</time></strong></div>
+        <div><p class="eyebrow">${escape(eyebrow)}</p><h1>${escape(title)}</h1><p class="hero-lead">${escape(lead)}</p></div>
+        ${date ? `<div class="build-date"><span>${escape(dateTitle)}</span><strong><time datetime="${escape(date)}">${escape(dateLabel(date.slice(0, 10)))}</time></strong></div>` : ''}
       </div>
     </div>
   </header>
-  <main class="wrap">
-    ${demo ? '<aside class="demo"><strong>Synthetic example data</strong><span>Illustrative values across all seven views.</span></aside>' : ''}
-    <nav class="view-nav" id="views" aria-labelledby="views-title">
-      <h2 id="views-title">Research views</h2>
-      <ul>${navigation}</ul>
-    </nav>
-    <div class="panels">
-      ${renderTreasury(report.treasury, demo)}
-      ${renderMacro(report.labor, demo)}
-      ${renderBreadth(report.market, demo)}
-      ${renderRelative(report.market, demo)}
-      ${renderTechnical(report.market, demo)}
-      ${renderFilings(report.filings, demo)}
-      ${renderFilings(report.filings, demo, true)}
-    </div>
-  </main>
-  <footer class="wrap footer"><span>Source-to-Trade Research Workbench</span><a href="#views">Back to research views ↑</a></footer>
-  <!-- WORKBENCH_SCRIPT -->
+  <main class="wrap" id="views">${body}</main>
+  <footer class="wrap footer"><span>Source-to-Trade Research Workbench</span><a href="${escape(home)}">Research views ↑</a></footer>
 </body>
 </html>
 `;
+}
+
+const legacyAnchors = {
+  macro: 'treasury', regime: 'breadth', beta: 'relative-risk', daily5: 'technical-screen',
+  news: 'company-filings', earnings: 'earnings-filings',
+};
+
+const demoBanner = '<aside class="demo"><strong>Synthetic example data</strong><span>Illustrative observations across 15 research views.</span></aside>';
+
+export function renderWorkbench(report, snapshot) {
+  const demo = report.mode === 'demo';
+  const groups = [...new Set(report.views.map(view => view.group))];
+  const body = `${demo ? demoBanner : ''}
+  ${groups.map((group, index) => `
+  <nav class="view-nav" aria-labelledby="group-${index}">
+    <h2 id="group-${index}">${escape(group)}</h2>
+    <ul>${report.views.filter(view => view.group === group).map(view => `
+      <li id="${view.id}">${legacyAnchors[view.id] ? `<span id="${legacyAnchors[view.id]}" class="sr-only"></span>` : ''}
+        <a href="reports/${snapshot}/${view.id}/index.html">
+          <span class="nav-title">${escape(view.title)}</span>
+          <span class="nav-description">${escape(view.description)}</span>
+          <span class="nav-state">${view.data ? (view.data.usable === false ? 'More history needed' : view.data.asOf ? escape(dateLabel(view.data.asOf)) : 'Source connected') : 'Connect a source'}</span>
+        </a>
+      </li>`).join('')}
+    </ul>
+  </nav>`).join('')}`;
+  return shell({
+    title: 'Research Workbench', lead: 'Fifteen research views for market conditions, security selection and company evidence.',
+    eyebrow: demo ? 'Self-hosted example' : 'Self-hosted research', date: report.generatedAt,
+    dateTitle: 'Snapshot generated (UTC)', home: '#top', body,
+  });
+}
+
+function tableCell(cell) {
+  if (cell && typeof cell === 'object') {
+    const url = httpsLink(cell.url);
+    return url ? `<a href="${escape(url)}">${escape(cell.text)}</a>` : escape(cell.text);
+  }
+  return escape(cell ?? '—');
+}
+
+export function renderResearchPage(report, view) {
+  const demo = report.mode === 'demo';
+  const content = view.data;
+  const parts = {
+    treasury: () => renderTreasury(report.treasury, demo),
+    macro: () => renderMacro(report.labor, demo),
+    breadth: () => renderBreadth(report.market, demo),
+    relative: () => renderRelative(report.market, demo),
+    technical: () => renderTechnical(report.market, demo),
+    filings: () => renderFilings(report.filings, demo),
+    earnings: () => renderFilings(report.filings, demo, true),
+  };
+  const sources = demo ? [] : [...new Set((content?.sources ?? []).map(httpsLink).filter(Boolean))];
+  const sourceLinks = sources.map((url, index) =>
+    `<a href="${escape(url)}">Data reference ${index + 1}</a>`).join(' · ');
+  const body = `${demo ? demoBanner : ''}
+  <p class="view-back"><a href="../../../index.html">← All research views</a></p>
+  <div class="panels">
+    ${content ? `
+      ${content.panels.map(id => parts[id]()).join('')}
+      ${content.tables.map(({ title, columns, rows }) => `
+      <section class="panel">
+        <header class="panel-header"><h2>${escape(title)}</h2></header>
+        <div class="panel-content">${rows.length ? table(title, columns, rows.map(row => row.map(tableCell)))
+          : '<p class="fine">No eligible records in this observation window.</p>'}</div>
+      </section>`).join('')}
+      ${sourceLinks ? `<p class="fine">${sourceLinks}</p>` : ''}
+    ` : `
+      <section class="panel">
+        <header class="panel-header"><h2>Connect a data source</h2></header>
+        <div class="panel-content"><p>This view accepts ${escape(view.input)}.</p><p><a href="${SETUP}">Set up your research inputs</a></p></div>
+      </section>`}
+  </div>`;
+  return shell({
+    title: view.title, lead: view.description, eyebrow: view.group,
+    date: content?.asOf, dateTitle: 'Latest observation', home: '../../../index.html', body,
+  });
 }

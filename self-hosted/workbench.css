@@ -108,6 +108,7 @@ h1 { font-size: clamp(2.25rem, 6vw, 4.25rem); letter-spacing: -.055em; }
   font-size: .92rem;
 }
 .view-nav { padding: 1.65rem 0 1.7rem; }
+.view-back { padding: 1.15rem 0; }
 .view-nav h2 { font-size: 1.2rem; margin-bottom: .8rem; }
 .view-nav ul {
   display: grid;
@@ -233,7 +234,7 @@ tbody tr:nth-child(even) { background: #f9fbfc; }
 
 @media (min-width: 1120px) {
   .panels { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
-  #treasury, #macro, #technical-screen, #company-filings, #earnings-filings { grid-column: 1 / -1; }
+  .panels #treasury, .panels #macro, .panels #technical-screen, .panels #company-filings, .panels #earnings-filings { grid-column: 1 / -1; }
 }
 
 @media (max-width: 580px) {

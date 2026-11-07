@@ -18,7 +18,7 @@ The production source code and raw datasets remain private.
 
 ## Build your own daily workbench
 
-The [self-hosted edition](self-hosted/README.md) builds a standalone English dashboard from public sources. Run the offline sample with `npm run workbench:demo`, or [configure daily updates on your GitHub fork](self-hosted/README.md#publish-a-daily-report-from-your-own-github-fork). It uses independent data and calculations, with optional SEC filings and local market analytics.
+The [self-hosted edition](self-hosted/README.md) generates 15 English research pages and provides 88 independently runnable public modules. Run the offline sample with `npm run workbench:demo`, inspect the modules with `npm run workbench:modules -- list`, or [configure daily updates on your GitHub fork](self-hosted/README.md#publish-a-daily-report-from-your-own-github-fork). Live pages use their connected public sources and optional operator-provided data.
 
 ## Use your data
 

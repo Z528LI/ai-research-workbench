@@ -1,5 +1,3 @@
-import { loadSyntheticMarket, summarizeMarket } from './market.mjs';
-
 export function demoReport(now) {
   const source = 'Synthetic example';
   const yields = Array.from({ length: 20 }, (_, index) => ({
@@ -35,6 +33,5 @@ export function demoReport(now) {
         },
       ],
     },
-    market: summarizeMarket(loadSyntheticMarket()),
   };
 }
