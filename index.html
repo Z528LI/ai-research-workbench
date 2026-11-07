@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Compare stocks with a market benchmark and measure breadth from your own prices. Runs locally in your browser.">
+  <title>Market Lab · Source-to-Trade</title>
+  <link rel="stylesheet" href="workbench.css">
+  <script src="market-analysis.js" defer></script>
+  <script src="workbench.js" defer></script>
+</head>
+<body>
+  <nav class="topbar" aria-label="Site">
+    <a class="brand" href="index.html"><span class="mark" aria-hidden="true"></span>Source-to-Trade</a>
+    <div class="toplinks">
+      <a href="#method">Method</a>
+      <a href="https://ai-research-workbench-z528li-20261106.quaintpartridge1.chatgpt.site/">Research workbench ↗</a>
+    </div>
+  </nav>
+  <main>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Public research tools</p>
+        <h1>Market Lab</h1>
+        <p>Compare a stock with its market and peers. See how broadly gains are shared across your universe.</p>
+      </div>
+      <div class="hero-actions">
+        <label for="csv-file" class="button primary">Use your CSV</label>
+        <input id="csv-file" class="file-input" type="file" accept=".csv,text/csv">
+        <button id="example-download" class="button secondary" type="button">Download sample CSV</button>
+      </div>
+    </header>
+    <div class="dataset-bar">
+      <div class="dataset-text"><strong id="data-name">Illustrative dataset</strong><span id="data-range"></span></div>
+      <button class="text-button" id="reset-data" type="button" hidden>Restore example</button>
+      <p id="data-status" role="status">CSV files stay in your browser.</p>
+    </div>
+    <form class="controls" aria-label="Analysis controls">
+      <label>Stock <select id="stock" name="stock"></select></label>
+      <label>Benchmark <select id="benchmark" name="benchmark"></select></label>
+      <label>Peer <select id="peer" name="peer"></select></label>
+      <label>Lookback
+        <select id="sessions" name="sessions">
+          <option value="20">20 sessions</option>
+          <option value="60">60 sessions</option>
+          <option value="120" selected>120 sessions</option>
+          <option value="252">252 sessions</option>
+          <option value="0">Full history</option>
+        </select>
+      </label>
+    </form>
+    <section class="metric-row" aria-label="Selected stock statistics">
+      <article><h2>Stock return</h2><p id="stock-return">—</p><small id="return-dates"></small></article>
+      <article><h2>Excess return</h2><p id="excess-return">—</p><small id="benchmark-return"></small></article>
+      <article><h2>Market beta</h2><p id="market-beta">—</p><small id="beta-sample"></small></article>
+      <article><h2>Advancing stocks</h2><p id="advance-share">—</p><small id="breadth-sample"></small></article>
+    </section>
+    <section class="panel plot" aria-labelledby="plot-title">
+      <div class="section-heading"><div><h2 id="plot-title">Relative performance</h2><p>Shared observation dates, rebased to 100.</p></div><div id="legend" class="legend" aria-label="Chart legend"></div></div>
+      <svg id="price-chart" role="img" aria-label="Relative performance of selected stock, benchmark and peer"></svg>
+      <p id="chart-empty" hidden>Choose symbols with at least two shared price dates for a chart.</p>
+      <div id="chart-controls" class="plot-controls">
+        <label for="chart-date">Explore date</label><input type="range" id="chart-date" min="0" value="0" max="1" aria-describedby="chart-readout">
+        <output id="chart-readout" for="chart-date"></output>
+      </div>
+    </section>
+    <div class="detail-grid">
+      <section class="panel" aria-labelledby="capture-title">
+        <h2 id="capture-title">Up and down markets</h2>
+        <p class="quiet">Stock move per unit of benchmark move, grouped by direction.</p>
+        <dl class="measures">
+          <div><dt>Up-market capture</dt><dd id="up-capture">—</dd><span id="up-n"></span></div>
+          <div><dt>Down-market capture</dt><dd id="down-capture">—</dd><span id="down-n"></span></div>
+        </dl>
+      </section>
+      <section class="panel" aria-labelledby="breadth-title">
+        <h2 id="breadth-title">Market breadth</h2>
+        <p class="quiet" id="breadth-date"></p>
+        <dl class="measures">
+          <div><dt>Advancing from prior session</dt><dd id="advance-count">—</dd><span>Stocks with both closes</span></div>
+          <div><dt>Above 20-session average</dt><dd id="trend-count">—</dd><span>Stocks with all 20 closes</span></div>
+        </dl>
+      </section>
+    </div>
+    <section class="panel" aria-labelledby="ranking-title">
+      <div class="section-heading"><div><h2 id="ranking-title">Stock comparison</h2><p>Ranked by excess return on each stock’s shared dates with the benchmark.</p></div><p id="ranking-count"></p></div>
+      <div class="table-scroll"><table>
+        <thead><tr><th scope="col">Stock</th><th scope="col">Return</th><th scope="col">Excess</th><th scope="col">Beta</th><th scope="col">Paired returns</th><th scope="col">Latest date</th></tr></thead>
+        <tbody id="rankings"></tbody>
+      </table></div>
+    </section>
+    <details class="panel method" id="method">
+      <summary>Method and CSV format</summary>
+      <p>Use a CSV with one row per ticker and date and the columns <code>date,symbol,close</code>. Choose a benchmark from the tickers in the file. Use a consistent closing-price series for each symbol, preferably adjusted for splits and dividends. The sample contains synthetic tickers and prices.</p>
+      <p>Returns compare the first and last dates a stock shares with the benchmark. The chart compares dates common to every selected series. Daily returns use adjacent observed benchmark dates when a stock has both prices. The calculation skips intervals with an unavailable stock close.</p>
+      <p>Beta is the slope of stock returns on benchmark returns. The displayed 95% interval uses Bartlett-weighted Newey–West standard errors. Beta requires 20 paired returns and variation in benchmark returns. Capture divides the stock’s mean return by the benchmark’s mean return for the selected direction and requires five observations in that direction.</p>
+      <p>Breadth counts eligible non-benchmark tickers in the supplied file. The 20-session average includes the last available session. This tool measures historical behavior for research.</p>
+    </details>
+    <footer>Source-to-Trade Market Lab <span>Browser-local calculations · no data service required</span></footer>
+  </main>
+  <noscript><p>Enable JavaScript to run the market calculations in this browser.</p></noscript>
+</body>
+</html>
