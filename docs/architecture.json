@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Research Workbench Architecture",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [1100, 534],
+    "legend": { "mode": "hidden" }
+  },
+  "components": [
+    { "id": "sources", "type": "external", "label": "Research Sources", "sublabel": "Markets, macro, filings, news", "pos": [42, 42], "size": [238, 76] },
+    { "id": "foundation", "type": "backend", "label": "Data Foundation", "sublabel": "Identity, dates and provenance", "pos": [431, 42], "size": [238, 76] },
+    { "id": "research", "type": "backend", "label": "Research Producers", "sublabel": "Markets, selection and companies", "pos": [820, 42], "size": [238, 76] },
+    { "id": "checks", "type": "security", "label": "Evidence Checks", "sublabel": "Coverage, eligibility and lineage", "pos": [820, 225], "size": [238, 76] },
+    { "id": "reports", "type": "database", "label": "Dated Reports", "sublabel": "Charts, tables and evidence", "pos": [431, 225], "size": [238, 76] },
+    { "id": "cockpit", "type": "backend", "label": "Private Cockpit", "sublabel": "Formal report selection", "pos": [42, 225], "size": [238, 76] },
+    { "id": "workbench", "type": "frontend", "label": "Public Workbench", "sublabel": "15 interactive research views", "pos": [42, 414], "size": [238, 76] },
+    { "id": "lab-input", "type": "external", "label": "Market Lab Inputs", "sublabel": "Synthetic sample or user CSV", "pos": [431, 414], "size": [238, 76] },
+    { "id": "lab", "type": "frontend", "label": "Public Market Lab", "sublabel": "In-browser market analytics", "pos": [820, 414], "size": [238, 76] }
+  ],
+  "connections": [
+    { "from": "sources", "to": "foundation", "label": "Route inputs" },
+    { "from": "foundation", "to": "research", "label": "Aligned evidence" },
+    { "from": "research", "to": "checks", "label": "Review outputs", "fromSide": "bottom", "toSide": "top", "labelDy": 55 },
+    { "from": "checks", "to": "reports", "label": "Record findings" },
+    { "from": "reports", "to": "cockpit", "label": "Bind formal views" },
+    { "from": "cockpit", "to": "workbench", "label": "Publish reviewed pages", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelDy": 55 },
+    { "from": "lab-input", "to": "lab", "label": "Analyze locally", "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Private research system", "items": ["The capability index covers 88 registered modules.", "Producers run on different schedules and share selected evidence."] },
+    { "dot": "emerald", "title": "Public products", "items": ["The Workbench serves reviewed research snapshots.", "Market Lab runs independently in the browser."] }
+  ]
+}

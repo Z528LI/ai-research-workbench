@@ -4,6 +4,18 @@
 
 Compare stocks with a benchmark, explore how returns behave when the market rises or falls, and measure how broadly gains are shared across your universe. The browser starts with an illustrative dataset so the controls work immediately.
 
+## Explore the research system
+
+The English Research Workbench presents 15 reviewed research views. This repository documents the system behind those views and includes the standalone Market Lab application.
+
+- [Module capability index](docs/module-capabilities.md) covers all 88 registered modules, organized by function.
+- [Workbench data pipelines](docs/pipelines/README.md) explains where each page gets its data, how the system processes and verifies it, and how it reaches the public Workbench.
+- [Interactive architecture](https://z528li.github.io/ai-research-workbench/docs/architecture.html) traces the path from research inputs to publication and shows how Market Lab runs independently.
+
+[![Research Workbench architecture](docs/architecture.png)](https://z528li.github.io/ai-research-workbench/docs/architecture.html)
+
+This repository contains the documentation and Market Lab application. The production source code and raw datasets remain private.
+
 ## Use your data
 
 1. Select **Use your CSV** and choose a price file. **Download sample CSV** provides a ready-to-edit template.
